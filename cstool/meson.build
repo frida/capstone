@@ -1,0 +1,28 @@
+sources = [
+  'cstool.c',
+  'cstool_arm.c',
+  'cstool_arm64.c',
+  'cstool_bpf.c',
+  'cstool_evm.c',
+  'cstool_m680x.c',
+  'cstool_m68k.c',
+  'cstool_mips.c',
+  'cstool_mos65xx.c',
+  'cstool_powerpc.c',
+  'cstool_riscv.c',
+  'cstool_sh.c',
+  'cstool_sparc.c',
+  'cstool_systemz.c',
+  'cstool_tms320c64x.c',
+  'cstool_tricore.c',
+  'cstool_wasm.c',
+  'cstool_x86.c',
+  'cstool_xcore.c',
+  'getopt.c',
+]
+
+executable('cstool', sources,
+  include_directories: include_dirs,
+  dependencies: [capstone_dep],
+  install: true,
+)
