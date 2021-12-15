@@ -100,7 +100,8 @@ capstone = library('capstone', sources,
 )
 capstone_dep = declare_dependency(
   link_with: capstone,
-  include_directories: include_dirs,
+  include_directories: include_directories('include' / 'capstone'),
+  variables: {'includedir': meson.current_source_dir() / 'include'},
 )
 
 pkg = import('pkgconfig')
