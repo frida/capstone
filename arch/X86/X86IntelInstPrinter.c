@@ -45,6 +45,8 @@
 #include "X86Mapping.h"
 #include "X86InstPrinterCommon.h"
 
+#ifndef CAPSTONE_TINY
+
 #define GET_INSTRINFO_ENUM
 #ifdef CAPSTONE_X86_REDUCE
 #include "X86GenInstrInfo_reduce.inc"
@@ -1059,5 +1061,13 @@ static void printanymem(MCInst *MI, unsigned OpNo, SStream *O)
 #endif
 
 #include "X86GenRegisterName1.inc"
+
+#else
+
+void X86_Intel_printInst(MCInst *MI, SStream *O, void *Info)
+{
+}
+
+#endif
 
 #endif

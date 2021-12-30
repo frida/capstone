@@ -32,6 +32,8 @@
 #include "AArch64Mapping.h"
 #include "AArch64AddressingModes.h"
 
+#ifndef CAPSTONE_TINY
+
 #define GET_REGINFO_ENUM
 #include "AArch64GenRegisterInfo.inc"
 
@@ -51,19 +53,17 @@ static void printCustomAliasOperand(MCInst *MI, uint64_t Address, unsigned OpIdx
 		unsigned PrintMethodIdx, SStream *OS);
 
 
+#ifndef CAPSTONE_DIET
 static cs_ac_type get_op_access(cs_struct *h, unsigned int id, unsigned int index)
 {
-#ifndef CAPSTONE_DIET
 	const uint8_t *arr = AArch64_get_op_access(h, id);
 
 	if (arr[index] == CS_AC_IGNORE)
 		return 0;
 
 	return arr[index];
-#else
-	return 0;
-#endif
 }
+#endif
 
 static void op_addImm(MCInst *MI, int v)
 {
@@ -3026,5 +3026,17 @@ void AArch64_post_printer(csh handle, cs_insn *flat_insn, char *insn_asm, MCInst
 		}
 	}
 }
+
+#else
+
+void AArch64_printInst(MCInst *MI, SStream *O, void *Info)
+{
+}
+
+void AArch64_post_printer(csh handle, cs_insn *flat_insn, char *insn_asm, MCInst *mci)
+{
+}
+
+#endif
 
 #endif

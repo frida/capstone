@@ -42,7 +42,7 @@
 #include "X86InstPrinterCommon.h"
 #include "X86Mapping.h"
 
-#ifndef CAPSTONE_X86_REDUCE
+#if !defined(CAPSTONE_TINY) && !defined(CAPSTONE_X86_REDUCE)
 void printSSEAVXCC(MCInst *MI, unsigned Op, SStream *O)
 {
 	uint8_t Imm = (uint8_t)(MCOperand_getImm(MCInst_getOperand(MI, Op)) & 0x1f);

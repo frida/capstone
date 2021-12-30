@@ -12,6 +12,7 @@
 
 cs_err AArch64_global_init(cs_struct *ud)
 {
+#ifndef CAPSTONE_TINY
 	MCRegisterInfo *mri;
 	mri = cs_mem_malloc(sizeof(*mri));
 	if (mri == NULL) {
@@ -19,15 +20,16 @@ cs_err AArch64_global_init(cs_struct *ud)
 	}
 
 	AArch64_init(mri);
-	ud->printer = AArch64_printInst;
 	ud->printer_info = mri;
 	ud->getinsn_info = mri;
-	ud->disasm = AArch64_getInstruction;
 	ud->reg_name = AArch64_reg_name;
-	ud->insn_id = AArch64_get_insn_id;
-	ud->insn_name = AArch64_insn_name;
 	ud->group_name = AArch64_group_name;
 	ud->post_printer = AArch64_post_printer;
+#endif
+	ud->printer = AArch64_printInst;
+	ud->disasm = AArch64_getInstruction;
+	ud->insn_id = AArch64_get_insn_id;
+	ud->insn_name = AArch64_insn_name;
 #ifndef CAPSTONE_DIET
 	ud->reg_access = AArch64_reg_access;
 #endif

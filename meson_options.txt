@@ -1,3 +1,14 @@
+option('profile',
+  type: 'combo',
+  choices: [
+    'full',
+    'slim',
+    'tiny',
+  ],
+  value: 'full',
+  description: 'Feature profile'
+)
+
 option('archs',
   type: 'array',
   choices: [
@@ -29,13 +40,6 @@ option('use_sys_dyn_mem',
   type: 'boolean',
   value: true,
   description: 'Use malloc/calloc/realloc/free/vsnprintf() provided by the system for internal memory management'
-)
-
-option('diet',
-  type: 'boolean',
-  value: false,
-  yield: true,
-  description: 'Make the library more compact: use less memory & smaller in binary size'
 )
 
 option('x86_reduce',

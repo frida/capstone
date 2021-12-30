@@ -16,7 +16,7 @@
 /* Capstone Disassembly Engine */
 /* By Nguyen Anh Quynh <aquynh@gmail.com>, 2013-2019 */
 
-#ifdef CAPSTONE_HAS_X86
+#if defined(CAPSTONE_HAS_X86) && !defined(CAPSTONE_TINY)
 
 #include <stdarg.h>   /* for va_*()       */
 #if defined(CAPSTONE_HAS_OSXKERNEL)

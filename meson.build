@@ -77,12 +77,27 @@ foreach arch_id : desired_archs
 endforeach
 
 defines = []
+deps = []
+profile = get_option('profile')
+if profile != 'full'
+  defines += '-DCAPSTONE_DIET'
+endif
+if profile == 'tiny'
+  defines += '-DCAPSTONE_TINY'
+  if 'x86' in desired_archs
+    fadec_options = [
+      'archmode=' + ((host_machine.cpu_family() == 'x86_64') ? 'only64' : 'only32'),
+      'with_encode=false',
+      'tests=false',
+    ]
+    deps += dependency('fadec', default_options: fadec_options)
+  endif
+endif
 foreach arch_id : desired_archs
   defines += '-DCAPSTONE_HAS_' + arch_id.to_upper()
 endforeach
 available_flags = [
   'use_sys_dyn_mem',
-  'diet',
   'x86_reduce',
   'x86_att_disable',
   'has_osxkernel',
@@ -104,6 +119,7 @@ include_dirs = include_directories('include')
 capstone = library('capstone', sources,
   c_args: defines,
   include_directories: include_dirs,
+  dependencies: deps,
   install: true,
 )
 capstone_dep = declare_dependency(
@@ -124,7 +140,7 @@ meson.override_dependency('capstone', capstone_dep)
 
 cli_option = get_option('cli')
 if cli_option.auto()
-  cli_enabled = not meson.is_subproject()
+  cli_enabled = profile == 'full' and not meson.is_subproject()
 else
   cli_enabled = cli_option.enabled()
 endif
