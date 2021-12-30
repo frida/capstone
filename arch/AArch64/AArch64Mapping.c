@@ -390,6 +390,8 @@ const char *AArch64_reg_name(csh handle, unsigned int reg)
 #endif
 }
 
+#ifndef CAPSTONE_TINY
+
 static const insn_map insns[] = {
 	// dummy item
 	{
@@ -428,6 +430,15 @@ void AArch64_get_insn_id(cs_struct *h, cs_insn *insn, unsigned int id)
 		}
 	}
 }
+
+#else
+
+void AArch64_get_insn_id(cs_struct *h, cs_insn *insn, unsigned int id)
+{
+	insn->id = id;
+}
+
+#endif
 
 static const char * const insn_name_maps[] = {
 	NULL, // ARM64_INS_INVALID

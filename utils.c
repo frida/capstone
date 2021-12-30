@@ -47,6 +47,7 @@ char *cs_strdup(const char *str)
 // we need this since Windows doesn't have snprintf()
 int cs_snprintf(char *buffer, size_t size, const char *fmt, ...)
 {
+#ifndef CAPSTONE_TINY
 	int ret;
 
 	va_list ap;
@@ -55,6 +56,9 @@ int cs_snprintf(char *buffer, size_t size, const char *fmt, ...)
 	va_end(ap);
 
 	return ret;
+#else
+	return -1;
+#endif
 }
 
 bool arr_exist8(unsigned char *arr, unsigned char max, unsigned int id)

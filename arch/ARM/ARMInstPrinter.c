@@ -31,6 +31,8 @@
 #include "../../utils.h"
 #include "ARMMapping.h"
 
+#ifndef CAPSTONE_TINY
+
 #define GET_SUBTARGETINFO_ENUM
 #include "ARMGenSubtargetInfo.inc"
 
@@ -3360,5 +3362,13 @@ void ARM_addSysReg(MCInst *MI, arm_sysreg reg)
 		MI->flat_insn->detail->arm.op_count++;
 	}
 }
+
+#else
+
+void ARM_printInst(MCInst *MI, SStream *O, void *Info)
+{
+}
+
+#endif
 
 #endif

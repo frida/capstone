@@ -31,6 +31,15 @@
 #include "ARMDisassembler.h"
 #include "ARMMapping.h"
 
+static const uint16_t GPRDecoderTable[] = {
+	ARM_R0, ARM_R1, ARM_R2, ARM_R3,
+	ARM_R4, ARM_R5, ARM_R6, ARM_R7,
+	ARM_R8, ARM_R9, ARM_R10, ARM_R11,
+	ARM_R12, ARM_SP, ARM_LR, ARM_PC
+};
+
+#ifndef CAPSTONE_TINY
+
 #define GET_SUBTARGETINFO_ENUM
 #include "ARMGenSubtargetInfo.inc"
 
@@ -963,13 +972,6 @@ bool ARM_getInstruction(csh ud, const uint8_t *code, size_t code_len, MCInst *in
 	//return status == MCDisassembler_Success;
 	return status != MCDisassembler_Fail;
 }
-
-static const uint16_t GPRDecoderTable[] = {
-	ARM_R0, ARM_R1, ARM_R2, ARM_R3,
-	ARM_R4, ARM_R5, ARM_R6, ARM_R7,
-	ARM_R8, ARM_R9, ARM_R10, ARM_R11,
-	ARM_R12, ARM_SP, ARM_LR, ARM_PC
-};
 
 static DecodeStatus DecodeGPRRegisterClass(MCInst *Inst, unsigned RegNo,
 		uint64_t Address, const void *Decoder)
@@ -5759,5 +5761,94 @@ static DecodeStatus DecodeForVMRSandVMSR(MCInst *Inst, unsigned Val,
 
 	return result;
 }
+
+#else
+
+void ARM_init(MCRegisterInfo *MRI)
+{
+}
+
+bool ARM_getInstruction(csh opaque_ud, const uint8_t *code, size_t code_len, MCInst *instr,
+		uint16_t *size, uint64_t address, void *info)
+{
+	cs_struct *ud = (cs_struct *)opaque_ud;
+	cs_insn *ci = instr->flat_insn;
+	cs_arm *arm = ci->detail ? &ci->detail->arm : NULL;
+	uint32_t insn;
+
+	*size = 0;
+
+	if (code_len < 4)
+		return false;
+
+	if (ci->detail) {
+		unsigned int i;
+
+		memset(ci->detail, 0, offsetof(cs_detail, arm) + sizeof(cs_arm));
+
+		for (i = 0; i < ARR_SIZE(ci->detail->arm.operands); i++) {
+			ci->detail->arm.operands[i].vector_index = -1;
+			ci->detail->arm.operands[i].neon_lane = -1;
+		}
+	}
+
+	if (MODE_IS_BIG_ENDIAN(ud->mode))
+		insn = (code[3] << 0) | (code[2] << 8) |
+			(code[1] <<  16) | ((uint32_t) code[0] << 24);
+	else
+		insn = ((uint32_t) code[3] << 24) | (code[2] << 16) |
+			(code[1] <<  8) | (code[0] <<  0);
+
+	MCInst_setOpcode(instr, ARM_INS_ENDING);
+	*size = 4;
+
+	//
+	// LDR (literal)
+	//
+	// E.g. e51fc01c => LDR r12, [pc, #-28]
+	//
+	// Cond     P U   W       Rt   Imm12
+	// 1110 010 1 0 0 0 11111 1100 000000011100
+	//
+	// => Pattern
+	// 0000 010 1 0 0 0 11111 0000 000000000000
+	//
+	// => Mask
+	// 0000 111 1 0 1 1 11111 0000 000000000000
+	//
+	if ((insn & 0xf7f0000) == 0x51f0000) {
+		MCInst_setOpcode(instr, ARM_INS_LDR);
+
+		if (arm) {
+			unsigned u, rt;
+			int imm12;
+			cs_arm_op *dst = &arm->operands[0];
+			cs_arm_op *src = &arm->operands[1];
+
+			u = (insn >> 23) & 1;
+			rt = (insn >> 12) & 0xf;
+			imm12 = insn & 0xfff;
+
+			arm->op_count = 2;
+
+			dst->type = ARM_OP_REG;
+			dst->reg = GPRDecoderTable[rt];
+
+			src->type = ARM_OP_MEM;
+			src->mem.base = ARM_REG_PC;
+			src->mem.disp = (u == 1) ? imm12 : -imm12;
+		}
+	}
+
+	return true;
+}
+
+bool Thumb_getInstruction(csh ud, const uint8_t *code, size_t code_len, MCInst *instr,
+		uint16_t *size, uint64_t address, void *info)
+{
+	return false;
+}
+
+#endif
 
 #endif

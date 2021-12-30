@@ -101,6 +101,8 @@
 #include "../../utils.h"
 #include "X86Mapping.h"
 
+#ifndef CAPSTONE_TINY
+
 #define GET_REGINFO_ENUM
 #define GET_REGINFO_MC_DESC
 #include "X86GenRegisterInfo.inc"
@@ -1029,5 +1031,38 @@ bool X86_getInstruction(csh ud, const uint8_t *code, size_t code_len,
 		return result;
 	}
 }
+
+#else
+
+#include <fadec.h>
+
+void X86_init(MCRegisterInfo *MRI)
+{
+}
+
+bool X86_getInstruction(csh opaque_ud, const uint8_t *code, size_t code_len,
+		MCInst *instr, uint16_t *size, uint64_t address, void *_info)
+{
+	cs_struct *ud = (cs_struct *)(uintptr_t)opaque_ud;
+	cs_insn *ci = instr->flat_insn;
+	int mode, res;
+	FdInstr fi;
+
+	if (ci->detail)
+		memset(ci->detail, 0, offsetof(cs_detail, x86) + sizeof(cs_x86));
+
+	mode = (ud->mode & CS_MODE_32) ? 32 : 64;
+
+	res = fd_decode(code, code_len, mode, 0, &fi);
+	if (res < 0)
+		return false;
+
+	MCInst_setOpcode(instr, X86_INS_ENDING);
+	*size = res;
+
+	return true;
+}
+
+#endif
 
 #endif

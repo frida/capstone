@@ -12,6 +12,7 @@
 
 cs_err ARM_global_init(cs_struct *ud)
 {
+#ifndef CAPSTONE_TINY
 	MCRegisterInfo *mri;
 	mri = cs_mem_malloc(sizeof(*mri));
 	if (mri == NULL) {
@@ -21,13 +22,14 @@ cs_err ARM_global_init(cs_struct *ud)
 	ARM_init(mri);
 	ARM_getRegName(ud, 0);	// use default get_regname
 
-	ud->printer = ARM_printInst;
 	ud->printer_info = mri;
 	ud->reg_name = ARM_reg_name;
-	ud->insn_id = ARM_get_insn_id;
-	ud->insn_name = ARM_insn_name;
 	ud->group_name = ARM_group_name;
 	ud->post_printer = ARM_post_printer;
+#endif
+	ud->printer = ARM_printInst;
+	ud->insn_id = ARM_get_insn_id;
+	ud->insn_name = ARM_insn_name;
 #ifndef CAPSTONE_DIET
 	ud->reg_access = ARM_reg_access;
 #endif
@@ -53,7 +55,9 @@ cs_err ARM_option(cs_struct *handle, cs_opt_type type, size_t value)
 
 			break;
 		case CS_OPT_SYNTAX:
+#ifndef CAPSTONE_TINY
 			ARM_getRegName(handle, (int)value);
+#endif
 			handle->syntax = (int)value;
 			break;
 		default:
