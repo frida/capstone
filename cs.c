@@ -554,6 +554,7 @@ cs_err CAPSTONE_API cs_close(csh *handle)
 // replace str1 in target with str2; target starts with str1
 // output is put into result (which is array of char with size CS_MNEMONIC_SIZE)
 // return 0 on success, -1 on failure
+#ifndef CAPSTONE_DIET
 static int str_replace(char *result, char *target, const char *str1, char *str2)
 {
 	// only perform replacement if the output fits into result
@@ -567,6 +568,7 @@ static int str_replace(char *result, char *target, const char *str1, char *str2)
 	} else
 		return -1;
 }
+#endif
 
 // fill insn with mnemonic & operands info
 static void fill_insn(struct cs_struct *handle, cs_insn *insn, char *buffer, MCInst *mci,
