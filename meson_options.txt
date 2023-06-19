@@ -36,6 +36,12 @@ option('archs',
   description: 'Which archs you want to compile in'
 )
 
+option('use_arch_registration',
+  type: 'boolean',
+  value: false,
+  description: 'Whether architectures must be registered using cs_arch_register_*(), to minimize footprint across diverse static consumers'
+)
+
 option('use_sys_dyn_mem',
   type: 'boolean',
   value: true,

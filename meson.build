@@ -97,6 +97,7 @@ foreach arch_id : desired_archs
   defines += '-DCAPSTONE_HAS_' + arch_id.to_upper()
 endforeach
 available_flags = [
+  'use_arch_registration',
   'use_sys_dyn_mem',
   'x86_reduce',
   'x86_att_disable',
