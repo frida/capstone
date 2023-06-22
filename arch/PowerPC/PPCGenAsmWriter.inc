@@ -6142,7 +6142,7 @@ static void printInstruction(MCInst *MI, SStream *O)
 
   // Fragment 0 encoded into 5 bits for 19 unique commands.
   // printf("Fragment 0: %"PRIu64"\n", ((Bits >> 14) & 31));
-  switch ((Bits >> 14) & 31) {
+  switch ((uint32_t)((Bits >> 14) & 31)) {
   default: // unreachable
   case 0:
     // DBG_VALUE, DBG_LABEL, BUNDLE, LIFETIME_START, LIFETIME_END, FENTRY_CAL...
@@ -6257,7 +6257,7 @@ static void printInstruction(MCInst *MI, SStream *O)
 
   // Fragment 1 encoded into 5 bits for 20 unique commands.
   // printf("Fragment 1: %"PRIu64"\n", ((Bits >> 19) & 31));
-  switch ((Bits >> 19) & 31) {
+  switch ((uint32_t)((Bits >> 19) & 31)) {
   default: // unreachable
   case 0:
     // CLRLSLDI, CLRLSLDIo, CLRLSLWI, CLRLSLWIo, CLRRDI, CLRRDIo, CLRRWI, CLR...
@@ -6397,7 +6397,7 @@ static void printInstruction(MCInst *MI, SStream *O)
 
   // Fragment 2 encoded into 5 bits for 23 unique commands.
   // printf("Fragment 2: %"PRIu64"\n", ((Bits >> 24) & 31));
-  switch ((Bits >> 24) & 31) {
+  switch ((uint32_t)((Bits >> 24) & 31)) {
   default: // unreachable
   case 0:
     // CLRLSLDI, CLRLSLDIo, CLRLSLWI, CLRLSLWIo, CLRRDI, CLRRDIo, CLRRWI, CLR...
@@ -6530,7 +6530,7 @@ static void printInstruction(MCInst *MI, SStream *O)
 
   // Fragment 3 encoded into 4 bits for 14 unique commands.
   // printf("Fragment 3: %"PRIu64"\n", ((Bits >> 29) & 15));
-  switch ((Bits >> 29) & 15) {
+  switch ((uint32_t)((Bits >> 29) & 15)) {
   default: // unreachable
   case 0:
     // CLRLSLDI, CLRLSLDIo, CLRLSLWI, CLRLSLWIo, CLRRDI, CLRRDIo, CLRRWI, CLR...
@@ -6617,7 +6617,7 @@ static void printInstruction(MCInst *MI, SStream *O)
 
   // Fragment 4 encoded into 4 bits for 13 unique commands.
   // printf("Fragment 4: %"PRIu64"\n", ((Bits >> 33) & 15));
-  switch ((Bits >> 33) & 15) {
+  switch ((uint32_t)((Bits >> 33) & 15)) {
   default: // unreachable
   case 0:
     // CLRLSLDI, CLRLSLDIo, CLRRDI, CLRRDIo, EXTLDI, EXTLDIo, EXTRDI, EXTRDIo...
@@ -6697,7 +6697,7 @@ static void printInstruction(MCInst *MI, SStream *O)
 
   // Fragment 6 encoded into 3 bits for 8 unique commands.
   // printf("Fragment 6: %"PRIu64"\n", ((Bits >> 38) & 7));
-  switch ((Bits >> 38) & 7) {
+  switch ((uint32_t)((Bits >> 38) & 7)) {
   default: // unreachable
   case 0:
     // CLRLSLDI, CLRLSLDIo, EXTLDI, EXTLDIo, EXTRDI, EXTRDIo, INSRDI, INSRDIo...
