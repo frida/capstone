@@ -14,7 +14,7 @@ available_archs = {
   'm68k': ['M68K', ['M68KDisassembler.c', 'M68KInstPrinter.c', 'M68KModule.c']],
   'mips': ['Mips', ['MipsDisassembler.c', 'MipsInstPrinter.c', 'MipsMapping.c', 'MipsModule.c']],
   'mos65xx': ['MOS65XX', ['MOS65XXDisassembler.c', 'MOS65XXModule.c']],
-  'powerpc': ['PowerPC', ['PPCDisassembler.c', 'PPCInstPrinter.c', 'PPCMapping.c', 'PPCModule.c']],
+  'ppc': ['PowerPC', ['PPCDisassembler.c', 'PPCInstPrinter.c', 'PPCMapping.c', 'PPCModule.c']],
   'riscv': ['RISCV', ['RISCVDisassembler.c', 'RISCVInstPrinter.c', 'RISCVMapping.c', 'RISCVModule.c']],
   'sh': ['SH', ['SHDisassembler.c', 'SHInstPrinter.c', 'SHModule.c']],
   'sparc': ['Sparc', ['SparcDisassembler.c', 'SparcInstPrinter.c', 'SparcMapping.c', 'SparcModule.c']],
