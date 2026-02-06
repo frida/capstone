@@ -158,7 +158,7 @@ const char *BPF_reg_name(csh handle, unsigned int reg)
 #endif
 }
 
-static bpf_insn op2insn_ld(unsigned opcode)
+static cs_bpf_insn op2insn_ld(unsigned opcode)
 {
 #define CASE(c) case BPF_SIZE_##c: \
 		if (BPF_CLASS(opcode) == BPF_CLASS_LD) \
@@ -177,7 +177,7 @@ static bpf_insn op2insn_ld(unsigned opcode)
 	return BPF_INS_INVALID;
 }
 
-static bpf_insn op2insn_st(unsigned opcode)
+static cs_bpf_insn op2insn_st(unsigned opcode)
 {
 	/*
 	 * - BPF_STX | BPF_XADD | BPF_{W,DW}
@@ -206,7 +206,7 @@ static bpf_insn op2insn_st(unsigned opcode)
 	return BPF_INS_INVALID;
 }
 
-static bpf_insn op2insn_alu(unsigned opcode)
+static cs_bpf_insn op2insn_alu(unsigned opcode)
 {
 	/* Endian is a special case */
 	if (BPF_OP(opcode) == BPF_ALU_END) {
@@ -253,7 +253,7 @@ static bpf_insn op2insn_alu(unsigned opcode)
 	return BPF_INS_INVALID;
 }
 
-static bpf_insn op2insn_jmp(unsigned opcode)
+static cs_bpf_insn op2insn_jmp(unsigned opcode)
 {
 	if (opcode == (BPF_CLASS_JMP | BPF_JUMP_CALL | BPF_SRC_X)) {
 		return BPF_INS_CALLX;
@@ -284,7 +284,7 @@ static bpf_insn op2insn_jmp(unsigned opcode)
 
 #ifndef CAPSTONE_DIET
 static void update_regs_access(cs_struct *ud, cs_detail *detail,
-		bpf_insn insn_id, unsigned int opcode)
+		cs_bpf_insn insn_id, unsigned int opcode)
 {
 	if (insn_id == BPF_INS_INVALID)
 		return;
@@ -367,10 +367,10 @@ void BPF_get_insn_id(cs_struct *ud, cs_insn *insn, unsigned int opcode)
 {
 	// No need to care the mode (cBPF or eBPF) since all checks has be done in
 	// BPF_getInstruction, we can simply map opcode to BPF_INS_*.
-	bpf_insn id = BPF_INS_INVALID;
+	cs_bpf_insn id = BPF_INS_INVALID;
 #ifndef CAPSTONE_DIET
 	cs_detail *detail;
-	bpf_insn_group grp;
+	cs_bpf_insn_group grp;
 
 	detail = insn->detail;
  #define PUSH_GROUP(grp) do { \
