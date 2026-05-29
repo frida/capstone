@@ -886,6 +886,24 @@ void AArch64_reg_access(const cs_insn *insn,
 		}
 	}
 
+	// The LSE compare-and-swap-pair (CASP) instructions take register-pair
+	// operands whose second element receives no operand-access info, so account
+	// for it explicitly: operands 0..1 are read and written, 2..3 are read.
+	if (insn->id == ARM64_INS_CASP || insn->id == ARM64_INS_CASPA ||
+			insn->id == ARM64_INS_CASPAL || insn->id == ARM64_INS_CASPL) {
+		for (i = 0; i < 4 && i < arm64->op_count; i++) {
+			arm64_reg reg = arm64->operands[i].reg;
+			if (!arr_exist(regs_read, read_count, reg)) {
+				regs_read[read_count] = (uint16_t)reg;
+				read_count++;
+			}
+			if (i < 2 && !arr_exist(regs_write, write_count, reg)) {
+				regs_write[write_count] = (uint16_t)reg;
+				write_count++;
+			}
+		}
+	}
+
 	*regs_read_count = read_count;
 	*regs_write_count = write_count;
 }
