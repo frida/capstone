@@ -19,7 +19,7 @@
 
 #if defined(_WIN32_WCE) && (_WIN32_WCE < 0x800)
 #include "windowsce/intrin.h"
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && !defined(__clang__)
 #include <intrin.h>
 #endif
 
