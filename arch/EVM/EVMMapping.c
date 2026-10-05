@@ -16,7 +16,6 @@ static const cs_evm insns[256] = {
 };
 #endif
 
-#ifndef CAPSTONE_DIET
 // look for @id in @insns, given its size in @max.
 // return -1 if not found
 static int evm_insn_find(const cs_evm *insns, unsigned int max, unsigned int id)
@@ -30,7 +29,6 @@ static int evm_insn_find(const cs_evm *insns, unsigned int max, unsigned int id)
 
 	return (int)id;
 }
-#endif
 
 // fill in details
 void EVM_get_insn_id(cs_struct *h, cs_insn *insn, unsigned int id)

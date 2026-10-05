@@ -32,8 +32,6 @@
 #include "AArch64Mapping.h"
 #include "AArch64AddressingModes.h"
 
-#ifndef CAPSTONE_TINY
-
 #define GET_REGINFO_ENUM
 #include "AArch64GenRegisterInfo.inc"
 
@@ -53,17 +51,19 @@ static void printCustomAliasOperand(MCInst *MI, uint64_t Address, unsigned OpIdx
 		unsigned PrintMethodIdx, SStream *OS);
 
 
-#ifndef CAPSTONE_DIET
 static cs_ac_type get_op_access(cs_struct *h, unsigned int id, unsigned int index)
 {
+#ifndef CAPSTONE_DIET
 	const uint8_t *arr = AArch64_get_op_access(h, id);
 
 	if (arr[index] == CS_AC_IGNORE)
 		return 0;
 
 	return arr[index];
-}
+#else
+	return 0;
 #endif
+}
 
 static void op_addImm(MCInst *MI, int v)
 {
@@ -1224,8 +1224,9 @@ static void printVRegOperand(MCInst *MI, unsigned OpNum, SStream *O)
 static void printSysCROperand(MCInst *MI, unsigned OpNum, SStream *O)
 {
 	MCOperand *Op = MCInst_getOperand(MI, OpNum);
+	unsigned Val = (unsigned)MCOperand_getImm(Op);
 	//assert(Op.isImm() && "System instruction C[nm] operands must be immediates!");
-	SStream_concat(O, "c%u", MCOperand_getImm(Op));
+	SStream_concat(O, "c%u", Val);
 
 	if (MI->csh->detail) {
 #ifndef CAPSTONE_DIET
@@ -1236,7 +1237,7 @@ static void printSysCROperand(MCInst *MI, unsigned OpNum, SStream *O)
 		MI->ac_idx++;
 #endif
 		MI->flat_insn->detail->arm64.operands[MI->flat_insn->detail->arm64.op_count].type = ARM64_OP_CIMM;
-		MI->flat_insn->detail->arm64.operands[MI->flat_insn->detail->arm64.op_count].imm = MCOperand_getImm(Op);
+		MI->flat_insn->detail->arm64.operands[MI->flat_insn->detail->arm64.op_count].imm = Val;
 		MI->flat_insn->detail->arm64.op_count++;
 	}
 }
@@ -3025,17 +3026,5 @@ void AArch64_post_printer(csh handle, cs_insn *flat_insn, char *insn_asm, MCInst
 		}
 	}
 }
-
-#else
-
-void AArch64_printInst(MCInst *MI, SStream *O, void *Info)
-{
-}
-
-void AArch64_post_printer(csh handle, cs_insn *flat_insn, char *insn_asm, MCInst *mci)
-{
-}
-
-#endif
 
 #endif

@@ -266,8 +266,6 @@ const char *ARM_reg_name2(csh handle, unsigned int reg)
 #endif
 }
 
-#ifndef CAPSTONE_TINY
-
 static const insn_map insns[] = {
 	// dummy item
 	{
@@ -345,15 +343,6 @@ void ARM_get_insn_id(cs_struct *h, cs_insn *insn, unsigned int id)
 		}
 	}
 }
-
-#else
-
-void ARM_get_insn_id(cs_struct *h, cs_insn *insn, unsigned int id)
-{
-	insn->id = id;
-}
-
-#endif
 
 #ifndef CAPSTONE_DIET
 static const char * const insn_name_maps[] = {

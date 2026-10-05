@@ -1,6 +1,105 @@
 This file details the changelog of Capstone.
 
 --------------------------------
+Version 5.0.9: May 28th, 2026
+
+## What's Changed
+
+* Set the correct CS_VERSION_EXTRA version number in capstone.h
+* Fix reachable OOB read in M68KInstPrinter.c (GHSA-jrw4-wj52-2vw8).
+* Fix invalid decoding for malformed br_table instruction in WASM (GHSA-5m9f-vqcm-g5pr).
+
+--------------------------------
+Version 5.0.8: May 23th, 2026
+
+## What's Changed
+* Python binding: Removing xprint utility used in the tests in v5 branch by @Antelox in https://github.com/capstone-engine/capstone/pull/2873
+* v5: Speedup x86 decoding with the help of LUT tables by @trufae in https://github.com/capstone-engine/capstone/pull/2907
+* Backport #2886 - cs_disasm_iter: return early on zero-size input by @Rot127 in https://github.com/capstone-engine/capstone/pull/2920
+* Backport #2913 - Implement load libcapstone.so with RTLD_DEEPBIND by @Rot127 in https://github.com/capstone-engine/capstone/pull/2919
+* Backport #2915 - Use setattr to rewire Cs.disasm to avoid type checking errors by @Rot127 in https://github.com/capstone-engine/capstone/pull/2918
+* Backport of CVE-2026-47143 fix by @Rot127 in https://github.com/capstone-engine/capstone/pull/2924
+* Backport #2930 by @Rot127 in https://github.com/capstone-engine/capstone/pull/2931
+
+**Full Changelog**: https://github.com/capstone-engine/capstone/compare/5.0.7...5.0.8
+
+--------------------------------
+Version 5.0.7: February 4th, 2026
+
+## What's Changed
+* Backport for 5.0.7 by @scribam in https://github.com/capstone-engine/capstone/pull/2785
+* CVE v5 backports by @Rot127 in https://github.com/capstone-engine/capstone/pull/2835
+
+**Full Changelog**: https://github.com/capstone-engine/capstone/compare/5.0.6...5.0.7
+
+--------------------------------
+Version 5.0.6: March 23th, 2025
+
+## What's Changed
+* V5 - Fix sdist build and add CI job for testing it. by @Rot127 in https://github.com/capstone-engine/capstone/pull/2623
+* Build Tarball before DEB/RPM package. by @Rot127 in https://github.com/capstone-engine/capstone/pull/2626
+* Fix cmake error when build with capstone as submodule by @WerWolv in https://github.com/capstone-engine/capstone/pull/2619
+* [v5] Tms32c64x little endian  by @Rot127 in https://github.com/capstone-engine/capstone/pull/2649
+
+## New Contributors
+* @WerWolv made their first contribution in https://github.com/capstone-engine/capstone/pull/2619
+
+--------------------------------
+Version 5.0.5: January 16th, 2025
+
+## What's Changed
+* Fix code missing in v5.0.4
+
+--------------------------------
+Version 5.0.4: January 16th, 2025
+
+## What's Changed
+* [v5][SuperH] Fix missing setting detail->sh by @david942j in https://github.com/capstone-engine/capstone/pull/2465
+* tricore: fixes #2386 in v5 by @imbillow in https://github.com/capstone-engine/capstone/pull/2527
+* Creating a functional Debian Package for Capstone v5 by @AndrewQuijano in https://github.com/capstone-engine/capstone/pull/2569
+* Duplicate of #2590 for v5 Branch by @AndrewQuijano in https://github.com/capstone-engine/capstone/pull/2596
+* Update version to v5.0.4 by @kabeor in https://github.com/capstone-engine/capstone/pull/2604
+
+--------------------------------
+Version 5.0.3: August 20th, 2024
+
+## What's Changed
+* [v5] Updates and fixes to the Python wheel builder workflow by @Rot127 in https://github.com/capstone-engine/capstone/pull/2440
+* Relocatable package v5 by @mrexodia in https://github.com/capstone-engine/capstone/pull/2447
+* [v5] Wheel build fixes: manylinux1, trigger upload on release, Linux AArch64 by @Rot127 in https://github.com/capstone-engine/capstone/pull/2443
+
+--------------------------------
+Version 5.0.2: August 12th, 2024
+
+## What's Changed
+* [v5] Add meta-programming macros for ARM64/AArch64 name change to capstone.h by @Rot127 in https://github.com/capstone-engine/capstone/pull/2199
+* [v5] Add CS_aarch64 macro without parameter. by @Rot127 in https://github.com/capstone-engine/capstone/pull/2219
+* [v5] python: Fix definition of capstone syntax value option constants by @nmeum in https://github.com/capstone-engine/capstone/pull/2240
+* Constify TriCore by @rth7680 in https://github.com/capstone-engine/capstone/pull/2246
+* Revert constant value of CS_OP_MEM to `v5.0.1` by @Rot127 in https://github.com/capstone-engine/capstone/pull/2275
+* Do not use 0b prefix, not supported on old compilers by @trufae in https://github.com/capstone-engine/capstone/pull/2306
+* Update CMakeLists.txt version (See #2310) by @PerikiyoXD in https://github.com/capstone-engine/capstone/pull/2311
+* [v5] Fix #2128 by adding missing mapping values. by @Rot127 in https://github.com/capstone-engine/capstone/pull/2334
+* [v5] Fix #2079: Add missing 1 immediate to `rcl` by @Rot127 in https://github.com/capstone-engine/capstone/pull/2329
+* [v5] Fix incorrect ID mappings for PPC by @Rot127 in https://github.com/capstone-engine/capstone/pull/2333
+* [v5] Fix #2244: Don't apply pseudo-instr. offset to `vcmp` id by @Rot127 in https://github.com/capstone-engine/capstone/pull/2332
+* Fix comparison using narrow types in loop condition by @trufae in https://github.com/capstone-engine/capstone/pull/2360
+* SH: Use bitwise OR with mask for sign extension by @lhsazevedo in https://github.com/capstone-engine/capstone/pull/2371
+* Remove deprecated packaging and cython by @twizmwazin in https://github.com/capstone-engine/capstone/pull/2400
+* [v5] Fix typo in AArch64 Python binding by @david942j in https://github.com/capstone-engine/capstone/pull/2412
+* Backport python-publish.yml from next by @twizmwazin in https://github.com/capstone-engine/capstone/pull/2408
+* [v5] Add release wheel build workflow for all Python versions by @Rot127 in https://github.com/capstone-engine/capstone/pull/2415
+* [v5] Fix unintended zero set in Sparc printInst by @david942j in https://github.com/capstone-engine/capstone/pull/2420
+* [v5][arm] Consider SpecRegRBit on setting SYSREG by @david942j in https://github.com/capstone-engine/capstone/pull/2422
+* Prepare for release v5.0.2 by @kabeor in https://github.com/capstone-engine/capstone/pull/2425
+
+## New Contributors
+* @nmeum made their first contribution in https://github.com/capstone-engine/capstone/pull/2240
+* @PerikiyoXD made their first contribution in https://github.com/capstone-engine/capstone/pull/2311
+* @lhsazevedo made their first contribution in https://github.com/capstone-engine/capstone/pull/2371
+
+
+--------------------------------
 Version 5.0.1: August 23rd, 2023
 
 ## What's Changed

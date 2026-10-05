@@ -58,7 +58,22 @@ extern "C" {
 // Capstone package version
 #define CS_VERSION_MAJOR CS_API_MAJOR
 #define CS_VERSION_MINOR CS_API_MINOR
-#define CS_VERSION_EXTRA 1
+#define CS_VERSION_EXTRA 9
+
+// Pre-release identifier.
+// A stable release.
+#define CS_VERSION_STABLE 0xffff
+
+// The postfix version: Alpha1, Alpha2, ..., Beta1, ...
+#define CS_VERSION_ALPHA 0xa000
+#define CS_VERSION_ALPHA9 (CS_VERSION_ALPHA | 9)
+
+#define CS_VERSION_BETA 0xb000
+#define CS_VERSION_BETA1 (CS_VERSION_BETA | 1)
+
+// The identifier of a pre-release (Alpha, Beta, ...).
+// It is set to CS_VERSION_STABLE, if this code is part of a stable release.
+#define CS_VERSION_PRE_RELEASE CS_VERSION_STABLE
 
 /// Macro for meta programming.
 /// Meant for projects using Capstone and need to support multiple
@@ -289,9 +304,8 @@ typedef enum cs_op_type {
 	CS_OP_INVALID = 0, ///< uninitialized/invalid operand.
 	CS_OP_REG,	   ///< Register operand.
 	CS_OP_IMM,	   ///< Immediate operand.
+	CS_OP_MEM,	   ///< Memory operand. Can be ORed with another operand type.
 	CS_OP_FP,	   ///< Floating-Point operand.
-	CS_OP_MEM =
-		0x80, ///< Memory operand. Can be ORed with another operand type.
 } cs_op_type;
 
 /// Common instruction operand access types - to be consistent across all architectures.
@@ -518,42 +532,6 @@ typedef enum cs_err {
 CAPSTONE_EXPORT
 unsigned int CAPSTONE_API cs_version(int *major, int *minor);
 
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_arm(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_arm64(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_mips(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_x86(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_ppc(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_sparc(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_sysz(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_xcore(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_m68k(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_tms320c64x(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_m680x(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_evm(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_mos65xx(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_wasm(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_bpf(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_riscv(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_sh(void);
-CAPSTONE_EXPORT
-void CAPSTONE_API cs_arch_register_tricore(void);
 
 /**
  This API can be used to either ask for archs supported by this library,

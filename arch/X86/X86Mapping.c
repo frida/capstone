@@ -946,8 +946,6 @@ const char *X86_group_name(csh handle, unsigned int id)
 #endif
 }
 
-#ifndef CAPSTONE_TINY
-
 #define GET_INSTRINFO_ENUM
 #ifdef CAPSTONE_X86_REDUCE
 #include "X86GenInstrInfo_reduce.inc"
@@ -978,18 +976,25 @@ static void arr_replace(uint16_t *arr, uint8_t max, x86_reg r1, x86_reg r2)
 }
 #endif
 
-// look for @id in @insns
-// return -1 if not found
+// O(1) lookup with per-handle table. Used by functions that have a cs_struct *.
+static inline unsigned int find_insn_h(cs_struct *h, unsigned int id)
+{
+	if (h && h->x86_insn_lut && id <= h->x86_insn_lut_max)
+		return (unsigned int)(int16_t)h->x86_insn_lut[id];
+
+	return find_insn(id);
+}
+
+// Fallback find_insn for callers without a cs_struct * (e.g., the decoder).
+// Uses binary search since no per-handle table is available.
 unsigned int find_insn(unsigned int id)
 {
-	// binary searching since the IDs are sorted in order
 	unsigned int left, right, m;
 	unsigned int max = ARR_SIZE(insns);
 
 	right = max - 1;
 
 	if (id < insns[0].id || id > insns[right].id)
-		// not found
 		return -1;
 
 	left = 0;
@@ -1006,15 +1011,13 @@ unsigned int find_insn(unsigned int id)
 			left = m + 1;
 	}
 
-	// not found
-	// printf("NOT FOUNDDDDDDDDDDDDDDD id = %u\n", id);
 	return -1;
 }
 
 // given internal insn id, return public instruction info
 void X86_get_insn_id(cs_struct *h, cs_insn *insn, unsigned int id)
 {
-	unsigned int i = find_insn(id);
+	unsigned int i = find_insn_h(h, id);
 	if (i != -1) {
 		insn->id = insns[i].mapid;
 
@@ -1217,6 +1220,19 @@ struct insn_reg2 {
 	x86_reg reg1, reg2;
 	enum cs_ac_type access1, access2;
 };
+
+static inline uint16_t pack_insn_reg(x86_reg reg, enum cs_ac_type access)
+{
+	return (uint16_t)(((unsigned int)access << 12) |
+		((unsigned int)reg & 0x0fff));
+}
+
+static inline x86_reg unpack_insn_reg(uint16_t val, enum cs_ac_type *access)
+{
+	if (access)
+		*access = (enum cs_ac_type)(val >> 12);
+	return (x86_reg)(val & 0x0fff);
+}
 
 static const struct insn_reg insn_regs_att[] = {
 	{ X86_INSB, X86_REG_DX, CS_AC_READ },
@@ -1517,11 +1533,75 @@ static int binary_search2(const struct insn_reg2 *insns, unsigned int max, unsig
 	return -1;
 }
 
+// Build per-handle O(1) lookup tables for instruction mapping.
+// Called from X86_global_init() during cs_open(). Each handle gets its own
+// copy of the lookup tables, making this thread-safe.
+void X86_build_lookup_tables(cs_struct *h)
+{
+	unsigned int i;
+	unsigned int max = ARR_SIZE(insns);
+	unsigned int id_max;
+
+	if (h->x86_insn_lut)
+		return;
+
+	id_max = insns[max - 1].id;
+	h->x86_insn_lut_max = id_max;
+
+	h->x86_insn_lut = (uint16_t *)cs_mem_malloc((id_max + 1) * sizeof(uint16_t));
+	CS_ASSERT_RET(h->x86_insn_lut);
+
+	memset(h->x86_insn_lut, 0xff, (id_max + 1) * sizeof(uint16_t));
+
+	for (i = 0; i < max; i++) {
+		h->x86_insn_lut[insns[i].id] = (uint16_t)i;
+	}
+
+	// Build insn_reg lookup table (low 16 bits = Intel, high 16 bits = ATT).
+	h->x86_insn_reg_lut = (uint32_t *)cs_mem_calloc(id_max + 1, sizeof(uint32_t));
+	CS_ASSERT_RET(h->x86_insn_reg_lut);
+
+	for (i = 0; i < ARR_SIZE(insn_regs_intel); i++) {
+		unsigned int insn_id = insn_regs_intel[i].insn;
+		if (insn_id <= id_max)
+			h->x86_insn_reg_lut[insn_id] =
+				(h->x86_insn_reg_lut[insn_id] & 0xffff0000) |
+				pack_insn_reg(insn_regs_intel[i].reg, insn_regs_intel[i].access);
+	}
+	for (i = 0; i < ARR_SIZE(insn_regs_intel_extra); i++) {
+		unsigned int insn_id = insn_regs_intel_extra[i].insn;
+		if (insn_id && insn_id <= id_max &&
+				!(h->x86_insn_reg_lut[insn_id] & 0xffff))
+			h->x86_insn_reg_lut[insn_id] =
+				(h->x86_insn_reg_lut[insn_id] & 0xffff0000) |
+				pack_insn_reg(insn_regs_intel_extra[i].reg, insn_regs_intel_extra[i].access);
+	}
+
+	for (i = 0; i < ARR_SIZE(insn_regs_att); i++) {
+		unsigned int insn_id = insn_regs_att[i].insn;
+		if (insn_id <= id_max)
+			h->x86_insn_reg_lut[insn_id] =
+				(h->x86_insn_reg_lut[insn_id] & 0x0000ffff) |
+				((uint32_t)pack_insn_reg(insn_regs_att[i].reg, insn_regs_att[i].access) << 16);
+	}
+	for (i = 0; i < ARR_SIZE(insn_regs_att_extra); i++) {
+		unsigned int insn_id = insn_regs_att_extra[i].insn;
+		if (insn_id && insn_id <= id_max &&
+				!(h->x86_insn_reg_lut[insn_id] >> 16))
+			h->x86_insn_reg_lut[insn_id] =
+				(h->x86_insn_reg_lut[insn_id] & 0x0000ffff) |
+				((uint32_t)pack_insn_reg(insn_regs_att_extra[i].reg, insn_regs_att_extra[i].access) << 16);
+	}
+}
+
 // return register of given instruction id
 // return 0 if not found
 // this is to handle instructions embedding accumulate registers into AsmStrs[]
+// Falls back to binary search when per-handle LUT is not available.
 x86_reg X86_insn_reg_intel(unsigned int id, enum cs_ac_type *access)
 {
+	// The per-handle LUT is used via X86_insn_reg_intel_h() from the printer.
+	// This fallback uses binary search for safety.
 	int i;
 
 	i = binary_search1(insn_regs_intel, ARR_SIZE(insn_regs_intel), id);
@@ -1540,8 +1620,19 @@ x86_reg X86_insn_reg_intel(unsigned int id, enum cs_ac_type *access)
 		return insn_regs_intel_extra[i].reg;
 	}
 
-	// not found
 	return 0;
+}
+
+// Fast per-handle variant used from the printer (which has access to cs_struct via MCInst).
+x86_reg X86_insn_reg_intel_h(cs_struct *h, unsigned int id, enum cs_ac_type *access)
+{
+	if (h && h->x86_insn_reg_lut && id <= h->x86_insn_lut_max) {
+		uint16_t val = (uint16_t)(h->x86_insn_reg_lut[id] & 0xffff);
+		if (val)
+			return unpack_insn_reg(val, access);
+		return 0;
+	}
+	return X86_insn_reg_intel(id, access);
 }
 
 bool X86_insn_reg_intel2(unsigned int id, x86_reg *reg1, enum cs_ac_type *access1, x86_reg *reg2, enum cs_ac_type *access2)
@@ -1579,8 +1670,18 @@ x86_reg X86_insn_reg_att(unsigned int id, enum cs_ac_type *access)
 		return insn_regs_att_extra[i].reg;
 	}
 
-	// not found
 	return 0;
+}
+
+x86_reg X86_insn_reg_att_h(cs_struct *h, unsigned int id, enum cs_ac_type *access)
+{
+	if (h && h->x86_insn_reg_lut && id <= h->x86_insn_lut_max) {
+		uint16_t val = (uint16_t)(h->x86_insn_reg_lut[id] >> 16);
+		if (val)
+			return unpack_insn_reg(val, access);
+		return 0;
+	}
+	return X86_insn_reg_att(id, access);
 }
 
 // ATT just reuses Intel data, but with the order of registers reversed
@@ -1605,7 +1706,7 @@ bool X86_insn_reg_att2(unsigned int id, x86_reg *reg1, enum cs_ac_type *access1,
 static bool valid_repne(cs_struct *h, unsigned int opcode)
 {
 	unsigned int id;
-	unsigned int i = find_insn(opcode);
+	unsigned int i = find_insn_h(h, opcode);
 	if (i != -1) {
 		id = insns[i].mapid;
 		switch(id) {
@@ -1673,7 +1774,7 @@ static bool valid_repne(cs_struct *h, unsigned int opcode)
 static bool valid_bnd(cs_struct *h, unsigned int opcode)
 {
 	unsigned int id;
-	unsigned int i = find_insn(opcode);
+	unsigned int i = find_insn_h(h, opcode);
 	if (i != -1) {
 		id = insns[i].mapid;
 		switch(id) {
@@ -1714,7 +1815,6 @@ static bool valid_bnd(cs_struct *h, unsigned int opcode)
 }
 #endif
 
-#ifndef CAPSTONE_DIET
 // return true if the opcode is XCHG [mem]
 static bool xchg_mem(unsigned int opcode)
 {
@@ -1728,13 +1828,12 @@ static bool xchg_mem(unsigned int opcode)
 				 return true;
 	}
 }
-#endif
 
 // given MCInst's id, find out if this insn is valid for REP prefix
 static bool valid_rep(cs_struct *h, unsigned int opcode)
 {
 	unsigned int id;
-	unsigned int i = find_insn(opcode);
+	unsigned int i = find_insn_h(h, opcode);
 	if (i != -1) {
 		id = insns[i].mapid;
 		switch(id) {
@@ -1785,7 +1884,6 @@ static bool valid_rep(cs_struct *h, unsigned int opcode)
 	return false;
 }
 
-#ifndef CAPSTONE_DIET
 // given MCInst's id, find if this is a "repz ret" instruction
 // gcc generates "repz ret" (f3 c3) instructions in some cases as an
 // optimization for AMD platforms, see:
@@ -1793,7 +1891,7 @@ static bool valid_rep(cs_struct *h, unsigned int opcode)
 static bool valid_ret_repz(cs_struct *h, unsigned int opcode)
 {
 	unsigned int id;
-	unsigned int i = find_insn(opcode);
+	unsigned int i = find_insn_h(h, opcode);
 
 	if (i != -1) {
 		id = insns[i].mapid;
@@ -1803,13 +1901,12 @@ static bool valid_ret_repz(cs_struct *h, unsigned int opcode)
 	// not found
 	return false;
 }
-#endif
 
 // given MCInst's id, find out if this insn is valid for REPE prefix
 static bool valid_repe(cs_struct *h, unsigned int opcode)
 {
 	unsigned int id;
-	unsigned int i = find_insn(opcode);
+	unsigned int i = find_insn_h(h, opcode);
 	if (i != -1) {
 		id = insns[i].mapid;
 		switch(id) {
@@ -1848,7 +1945,7 @@ static bool valid_repe(cs_struct *h, unsigned int opcode)
 static bool valid_notrack(cs_struct *h, unsigned int opcode)
 {
 	unsigned int id;
-	unsigned int i = find_insn(opcode);
+	unsigned int i = find_insn_h(h, opcode);
 	if (i != -1) {
 		id = insns[i].mapid;
 		switch(id) {
@@ -2115,7 +2212,7 @@ static const insn_op insn_ops[] = {
 // given internal insn id, return operand access info
 const uint8_t *X86_get_op_access(cs_struct *h, unsigned int id, uint64_t *eflags)
 {
-	unsigned int i = find_insn(id);
+	unsigned int i = find_insn_h(h, id);
 	if (i != -1) {
 		*eflags = insn_ops[i].flags;
 		return insn_ops[i].access;
@@ -2246,13 +2343,27 @@ unsigned short X86_register_map(unsigned short id)
 	return 0;
 }
 
-#else
-
-void X86_get_insn_id(cs_struct *h, cs_insn *insn, unsigned int id)
-{
-	insn->id = id;
+/// The post-printer function. Used to fixup flaws in the disassembly information
+/// of certain instructions.
+void X86_postprinter(csh handle, cs_insn *insn, char *mnem, MCInst *mci) {
+	if (!insn || !insn->detail) {
+		return;
+	}
+	switch (insn->id) {
+	default:
+		break;
+	case X86_INS_RCL:
+		// Addmissing 1 immediate
+		if (insn->detail->x86.op_count > 1) {
+			return;
+		}
+		insn->detail->x86.operands[1].imm = 1;
+		insn->detail->x86.operands[1].type = X86_OP_IMM;
+		insn->detail->x86.operands[1].access = CS_AC_READ;
+		insn->detail->x86.op_count++;
+		break;
+	}
 }
 
-#endif
 
 #endif

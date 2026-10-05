@@ -12,23 +12,24 @@
 
 cs_err X86_global_init(cs_struct *ud)
 {
-#ifndef CAPSTONE_TINY
 	MCRegisterInfo *mri;
 	mri = cs_mem_malloc(sizeof(*mri));
+	if (mri == NULL) {
+		return CS_ERR_MEM;
+	}
 
 	X86_init(mri);
 
 	// by default, we use Intel syntax
-	ud->printer_info = mri;
-	ud->reg_name = X86_reg_name;
-	ud->group_name = X86_group_name;
-#endif
 	ud->printer = X86_Intel_printInst;
 	ud->syntax = CS_OPT_SYNTAX_INTEL;
+	ud->printer_info = mri;
 	ud->disasm = X86_getInstruction;
+	ud->reg_name = X86_reg_name;
 	ud->insn_id = X86_get_insn_id;
 	ud->insn_name = X86_insn_name;
-	ud->post_printer = NULL;
+	ud->group_name = X86_group_name;
+	ud->post_printer = X86_postprinter;
 #ifndef CAPSTONE_DIET
 	ud->reg_access = X86_reg_access;
 #endif
@@ -37,6 +38,9 @@ cs_err X86_global_init(cs_struct *ud)
 		ud->regsize_map = regsize_map_64;
 	else
 		ud->regsize_map = regsize_map_32;
+
+	// Build per-handle O(1) lookup tables for instruction mapping
+	X86_build_lookup_tables(ud);
 
 	return CS_ERR_OK;
 }

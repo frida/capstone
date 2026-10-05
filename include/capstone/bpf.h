@@ -91,7 +91,7 @@ typedef struct cs_bpf {
 } cs_bpf;
 
 /// BPF instruction
-typedef enum cs_bpf_insn {
+typedef enum bpf_insn {
 	BPF_INS_INVALID = 0,
 
 	///< ALU
@@ -185,10 +185,10 @@ typedef enum cs_bpf_insn {
 	BPF_INS_LDX = BPF_INS_LDXW,	///< cBPF only
 	BPF_INS_ST = BPF_INS_STW,	///< cBPF only
 	BPF_INS_STX = BPF_INS_STXW,	///< cBPF only
-} cs_bpf_insn;
+} bpf_insn;
 
 /// Group of BPF instructions
-typedef enum cs_bpf_insn_group {
+typedef enum bpf_insn_group {
 	BPF_GRP_INVALID = 0, ///< = CS_GRP_INVALID
 
 	BPF_GRP_LOAD,
@@ -200,7 +200,7 @@ typedef enum cs_bpf_insn_group {
 	BPF_GRP_MISC, ///< cBPF only
 
 	BPF_GRP_ENDING,
-} cs_bpf_insn_group;
+} bpf_insn_group;
 
 #ifdef __cplusplus
 }

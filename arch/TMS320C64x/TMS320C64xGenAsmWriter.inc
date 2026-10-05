@@ -295,7 +295,6 @@ static void printInstruction(MCInst *MI, SStream *O, MCRegisterInfo *MRI) {
     0U
   };
 
-#ifndef CAPSTONE_DIET
   static const char AsmStrs[] = {
   /* 0 */ 'n', 'o', 'p', 9, 9, 0,
   /* 6 */ 's', 'u', 'b', '2', 9, 0,
@@ -429,7 +428,6 @@ static void printInstruction(MCInst *MI, SStream *O, MCRegisterInfo *MRI) {
   /* 897 */ 'b', 9, 'n', 'r', 'p', 0,
   /* 903 */ 'l', 'i', 'f', 'e', 't', 'i', 'm', 'e', '_', 's', 't', 'a', 'r', 't', 0,
   };
-#endif
 
   // Emit the opcode for the instruction.
   uint32_t Bits = OpInfo[MCInst_getOpcode(MI)];
@@ -440,7 +438,7 @@ static void printInstruction(MCInst *MI, SStream *O, MCRegisterInfo *MRI) {
 
 
   // Fragment 0 encoded into 3 bits for 8 unique commands.
-  switch ((uint32_t)((Bits >> 10) & 7)) {
+  switch ((Bits >> 10) & 7) {
   default:
   case 0:
     // DBG_VALUE, BUNDLE, LIFETIME_START, LIFETIME_END, B_s7_irp, B_s7_nrp
@@ -488,7 +486,7 @@ static void printInstruction(MCInst *MI, SStream *O, MCRegisterInfo *MRI) {
 
 
   // Fragment 1 encoded into 3 bits for 7 unique commands.
-  switch ((uint32_t)((Bits >> 13) & 7)) {
+  switch ((Bits >> 13) & 7) {
   default:
   case 0:
     // ABS2_l2_rr, ABS_l1_rr, ADDKPC_s3_iir, ADDK_s2_ir, BDEC_s8_ir, BITC4_m2...
@@ -526,7 +524,7 @@ static void printInstruction(MCInst *MI, SStream *O, MCRegisterInfo *MRI) {
 
 
   // Fragment 2 encoded into 3 bits for 8 unique commands.
-  switch ((uint32_t)((Bits >> 16) & 7)) {
+  switch ((Bits >> 16) & 7) {
   default:
   case 0:
     // ABS2_l2_rr, ABS_l1_rr, ADDK_s2_ir, BDEC_s8_ir, BITC4_m2_rr, BPOS_s8_ir...

@@ -6976,7 +6976,7 @@ static void printInstruction(MCInst *MI, SStream *O)
 
   // Fragment 0 encoded into 5 bits for 32 unique commands.
   // printf("Fragment 0: %"PRIu64"\n", ((Bits >> 12) & 31));
-  switch ((uint32_t)((Bits >> 12) & 31)) {
+  switch ((Bits >> 12) & 31) {
   default: // unreachable
   case 0:
     // DBG_VALUE, DBG_LABEL, BUNDLE, LIFETIME_START, LIFETIME_END, FENTRY_CAL...
@@ -7163,7 +7163,7 @@ static void printInstruction(MCInst *MI, SStream *O)
 
   // Fragment 1 encoded into 7 bits for 75 unique commands.
   // printf("Fragment 1: %"PRIu64"\n", ((Bits >> 17) & 127));
-  switch ((uint32_t)((Bits >> 17) & 127)) {
+  switch ((Bits >> 17) & 127) {
   default: // unreachable
   case 0:
     // ASRi, ASRr, ITasm, LDRBT_POST, LDRConstPool, LDRT_POST, LSLi, LSLr, LS...
@@ -7714,7 +7714,7 @@ static void printInstruction(MCInst *MI, SStream *O)
 
   // Fragment 2 encoded into 6 bits for 60 unique commands.
   // printf("Fragment 2: %"PRIu64"\n", ((Bits >> 24) & 63));
-  switch ((uint32_t)((Bits >> 24) & 63)) {
+  switch ((Bits >> 24) & 63) {
   default: // unreachable
   case 0:
     // ASRi, ASRr, LDRBT_POST, LDRConstPool, LDRT_POST, LSLi, LSLr, LSRi, LSR...
@@ -8095,7 +8095,7 @@ static void printInstruction(MCInst *MI, SStream *O)
 
   // Fragment 3 encoded into 5 bits for 30 unique commands.
   // printf("Fragment 3: %"PRIu64"\n", ((Bits >> 30) & 31));
-  switch ((uint32_t)((Bits >> 30) & 31)) {
+  switch ((Bits >> 30) & 31) {
   default: // unreachable
   case 0:
     // ASRi, ASRr, LDRBT_POST, LDRConstPool, LDRT_POST, LSLi, LSLr, LSRi, LSR...
@@ -8261,7 +8261,7 @@ static void printInstruction(MCInst *MI, SStream *O)
 
   // Fragment 4 encoded into 7 bits for 65 unique commands.
   // printf("Fragment 4: %"PRIu64"\n", ((Bits >> 35) & 127));
-  switch ((uint32_t)((Bits >> 35) & 127)) {
+  switch ((Bits >> 35) & 127) {
   default: // unreachable
   case 0:
     // ASRi, ASRr, LDRConstPool, LSLi, LSLr, LSRi, LSRr, RORi, RORr, RRXi, t2...
@@ -8666,7 +8666,7 @@ static void printInstruction(MCInst *MI, SStream *O)
 
   // Fragment 5 encoded into 5 bits for 23 unique commands.
   // printf("Fragment 5: %"PRIu64"\n", ((Bits >> 42) & 31));
-  switch ((uint32_t)((Bits >> 42) & 31)) {
+  switch ((Bits >> 42) & 31) {
   default: // unreachable
   case 0:
     // ASRi, ASRr, LSLi, LSLr, LSRi, LSRr, RORi, RORr, VLD1LNdWB_register_Asm...
@@ -8814,7 +8814,7 @@ static void printInstruction(MCInst *MI, SStream *O)
 
   // Fragment 6 encoded into 6 bits for 38 unique commands.
   // printf("Fragment 6: %"PRIu64"\n", ((Bits >> 47) & 63));
-  switch ((uint32_t)((Bits >> 47) & 63)) {
+  switch ((Bits >> 47) & 63) {
   default: // unreachable
   case 0:
     // ASRi, ASRr, LSLi, LSLr, LSRi, LSRr, RORi, RORr, ADCrr, ADDrr, ANDrr, B...
@@ -9035,7 +9035,7 @@ static void printInstruction(MCInst *MI, SStream *O)
 
   // Fragment 7 encoded into 4 bits for 13 unique commands.
   // printf("Fragment 7: %"PRIu64"\n", ((Bits >> 53) & 15));
-  switch ((uint32_t)((Bits >> 53) & 15)) {
+  switch ((Bits >> 53) & 15) {
   default: // unreachable
   case 0:
     // ASRi, ASRr, LSLi, LSLr, LSRi, LSRr, RORi, RORr, VLD1LNdWB_register_Asm...
@@ -9110,7 +9110,7 @@ static void printInstruction(MCInst *MI, SStream *O)
 
   // Fragment 8 encoded into 4 bits for 12 unique commands.
   // printf("Fragment 8: %"PRIu64"\n", ((Bits >> 57) & 15));
-  switch ((uint32_t)((Bits >> 57) & 15)) {
+  switch ((Bits >> 57) & 15) {
   default: // unreachable
   case 0:
     // LDRD_POST, STRD_POST

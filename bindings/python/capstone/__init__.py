@@ -1,6 +1,6 @@
 # Capstone Python bindings, by Nguyen Anh Quynnh <aquynh@gmail.com>
 import os, sys
-from platform import system
+
 _python2 = sys.version_info[0] < 3
 if _python2:
     range = xrange
@@ -150,8 +150,8 @@ __all__ = [
     'CS_OP_INVALID',
     'CS_OP_REG',
     'CS_OP_IMM',
-    'CS_OP_FP',
     'CS_OP_MEM',
+    'CS_OP_FP',
 
     'CS_GRP_INVALID',
     'CS_GRP_JUMP',
@@ -180,7 +180,7 @@ CS_API_MINOR = 0
 # Package version
 CS_VERSION_MAJOR = CS_API_MAJOR
 CS_VERSION_MINOR = CS_API_MINOR
-CS_VERSION_EXTRA = 1
+CS_VERSION_EXTRA = 7
 
 __version__ = "%u.%u.%u" %(CS_VERSION_MAJOR, CS_VERSION_MINOR, CS_VERSION_EXTRA)
 
@@ -290,8 +290,8 @@ CS_OPT_ON = 3              # Turn ON an option (CS_OPT_DETAIL)
 CS_OP_INVALID = 0  # uninitialized/invalid operand.
 CS_OP_REG = 1  # Register operand.
 CS_OP_IMM = 2  # Immediate operand.
-CS_OP_FP  = 3  # Floating-Point operand.
-CS_OP_MEM = 0x80  # Memory operand. Can be ORed with another operand type.
+CS_OP_MEM = 3  # Memory operand. Can be ORed with another operand type.
+CS_OP_FP  = 4  # Floating-Point operand.
 
 # Common instruction groups - to be consistent across all architectures.
 CS_GRP_INVALID = 0  # uninitialized/invalid group.
@@ -348,48 +348,59 @@ CS_OPT   = {v:k for k,v in locals().items() if k.startswith('CS_OPT_')}
 
 import ctypes, ctypes.util
 from os.path import split, join, dirname
-import distutils.sysconfig
-import pkg_resources
+import sysconfig
+from pathlib import PurePath
 
 import inspect
+
+if sys.version_info >= (3, 9):
+    import importlib.resources as resources
+else:
+    import importlib_resources as resources
+
 if not hasattr(sys.modules[__name__], '__file__'):
     __file__ = inspect.getfile(inspect.currentframe())
 
+mode = 0
 if sys.platform == 'darwin':
     _lib = "libcapstone.dylib"
 elif sys.platform in ('win32', 'cygwin'):
     _lib = "capstone.dll"
 else:
     _lib = "libcapstone.so"
+    mode = getattr(os, 'RTLD_DEEPBIND', 0)
 
 _found = False
 
 def _load_lib(path):
     lib_file = join(path, _lib)
     if os.path.exists(lib_file):
-        return ctypes.cdll.LoadLibrary(lib_file)
+        return ctypes.CDLL(lib_file, mode=mode)
     else:
         # if we're on linux, try again with .so.5 extension
         if lib_file.endswith('.so'):
             if os.path.exists(lib_file + '.{}'.format(CS_VERSION_MAJOR)):
-                return ctypes.cdll.LoadLibrary(lib_file + '.{}'.format(CS_VERSION_MAJOR))
+                return ctypes.CDLL(
+                    lib_file + '.{}'.format(CS_VERSION_MAJOR),
+                    mode=mode
+                )
     return None
 
 _cs = None
 
 # Loading attempts, in order
 # - user-provided environment variable
-# - pkg_resources can get us the path to the local libraries
+# - importlib.resources can get us the path to the local libraries
 # - we can get the path to the local libraries by parsing our filename
 # - global load
 # - python's lib directory
 # - last-gasp attempt at some hardcoded paths on darwin and linux
 
 _path_list = [os.getenv('LIBCAPSTONE_PATH', None),
-              pkg_resources.resource_filename(__name__, 'lib'),
+              str(resources.files(__name__) / "lib"),
               join(split(__file__)[0], 'lib'),
               '',
-              distutils.sysconfig.get_python_lib(),
+              sysconfig.get_path('platlib'),
               "/usr/local/lib/" if sys.platform == 'darwin' else '/usr/lib64']
 
 for _path in _path_list:
@@ -918,7 +929,7 @@ class Cs(object):
         try:
             from . import ccapstone
             # rewire disasm to use the faster version
-            self.disasm = ccapstone.Cs(self).disasm
+            setattr(self, "disasm", ccapstone.Cs(self).disasm)
         except:
             pass
 

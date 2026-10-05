@@ -16,7 +16,7 @@
 /* Capstone Disassembly Engine */
 /* By Nguyen Anh Quynh <aquynh@gmail.com>, 2013-2019 */
 
-#if defined(CAPSTONE_HAS_X86) && !defined(CAPSTONE_TINY)
+#ifdef CAPSTONE_HAS_X86
 
 #include <stdarg.h>   /* for va_*()       */
 #if defined(CAPSTONE_HAS_OSXKERNEL)
@@ -99,7 +99,8 @@ static int modRMRequired(OpcodeType type,
 	unsigned int index;
 
 	switch (type) {
-		default: break;
+		default:
+			return false;
 		case ONEBYTE:
 			decision = ONEBYTE_SYM;
 			indextable = index_x86DisassemblerOneByteOpcodes;
@@ -163,7 +164,8 @@ static InstrUID decode(OpcodeType type,
 	static const struct OpcodeDecision emptyDecision = { 0 };
 
 	switch (type) {
-		default: break;	// never reach
+		default:
+			return 0;
 		case ONEBYTE:
 			// dec = &ONEBYTE_SYM.opcodeDecisions[insnContext].modRMDecisions[opcode];
 			index = index_x86DisassemblerOneByteOpcodes[insnContext];

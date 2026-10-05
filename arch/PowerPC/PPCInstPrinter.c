@@ -79,14 +79,16 @@ void PPC_post_printer(csh ud, cs_insn *insn, char *insn_asm, MCInst *mci)
 	if (((cs_struct *)ud)->detail != CS_OPT_ON)
 		return;
 
-	// check if this insn has branch hint
-	if (strrchr(insn->mnemonic, '+') != NULL && !strstr(insn_asm, ".+")) {
-		insn->detail->ppc.bh = PPC_BH_PLUS;
-	} else if (strrchr(insn->mnemonic, '-') != NULL) {
-		insn->detail->ppc.bh = PPC_BH_MINUS;
-	}
+	// insn->mnemonic is not filled yet; the record-form '.' and the branch
+	// hint '+'/'-' are always the last char of the mnemonic token of insn_asm
+	size_t n = strcspn(insn_asm, " \t");
+	char c = n ? insn_asm[n - 1] : 0;
 
-	if (strrchr(insn->mnemonic, '.') != NULL) {
+	if (c == '+') {
+		insn->detail->ppc.bh = PPC_BH_PLUS;
+	} else if (c == '-') {
+		insn->detail->ppc.bh = PPC_BH_MINUS;
+	} else if (c == '.') {
 		insn->detail->ppc.update_cr0 = true;
 	}
 }
@@ -1142,7 +1144,6 @@ static void printTLSCall(MCInst *MI, unsigned OpNo, SStream *O)
 	set_mem_access(MI, false);
 }
 
-#ifndef CAPSTONE_DIET
 /// stripRegisterPrefix - This method strips the character prefix from a
 /// register name so that only the number is left.  Used by for linux asm.
 static char *stripRegisterPrefix(const char *RegName)
@@ -1171,7 +1172,6 @@ static char *stripRegisterPrefix(const char *RegName)
 
 	return cs_strdup(RegName);
 }
-#endif
 
 static void printOperand(MCInst *MI, unsigned OpNo, SStream *O)
 {

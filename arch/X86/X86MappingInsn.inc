@@ -18808,7 +18808,7 @@
 {
 	X86_TEST64mr, X86_INS_TEST, 1,
 #ifndef CAPSTONE_DIET
-	{ 0 }, { 0 }, { 0 }, 0, 0
+	{ 0 }, { X86_REG_EFLAGS, 0 }, { 0 }, 0, 0
 #endif
 },
 
@@ -105973,5 +105973,33 @@
 	X86_XTEST, X86_INS_XTEST, 0,
 #ifndef CAPSTONE_DIET
 	{ 0 }, { X86_REG_EFLAGS, 0 }, { 0 }, 0, 0
+#endif
+},
+
+{
+	X86_MOVSX32rm32, X86_INS_MOVSXD, 1,
+#ifndef CAPSTONE_DIET
+	{ 0 }, { 0 }, { X86_GRP_MODE64, 0 }, 0, 0
+#endif
+},
+
+{
+	X86_MOVSX32rr32, X86_INS_MOVSXD, 1,
+#ifndef CAPSTONE_DIET
+	{ 0 }, { 0 }, { X86_GRP_MODE64, 0 }, 0, 0
+#endif
+},
+
+{
+	X86_MOVSX16rm32, X86_INS_MOVSXD, 1,
+#ifndef CAPSTONE_DIET
+	{ 0 }, { 0 }, { X86_GRP_MODE64, 0 }, 0, 0
+#endif
+},
+
+{
+	X86_MOVSX16rr32, X86_INS_MOVSXD, 1,
+#ifndef CAPSTONE_DIET
+	{ 0 }, { 0 }, { X86_GRP_MODE64, 0 }, 0, 0
 #endif
 },

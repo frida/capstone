@@ -17,7 +17,7 @@
 
 #ifdef CAPSTONE_HAS_X86
 
-#ifdef _MSC_VER
+#if defined (WIN32) || defined (WIN64) || defined (_WIN32) || defined (_WIN64)
 #pragma warning(disable:4996)			// disable MSVC's warning on strncpy()
 #pragma warning(disable:28719)		// disable MSVC's warning on strncpy()
 #endif
@@ -44,8 +44,6 @@
 #include "X86InstPrinter.h"
 #include "X86Mapping.h"
 #include "X86InstPrinterCommon.h"
-
-#ifndef CAPSTONE_TINY
 
 #define GET_INSTRINFO_ENUM
 #ifdef CAPSTONE_X86_REDUCE
@@ -699,7 +697,7 @@ static void printInstruction(MCInst *MI, SStream *O);
 
 void X86_Intel_printInst(MCInst *MI, SStream *O, void *Info)
 {
-	x86_reg reg, reg2;
+	x86_reg reg = X86_REG_INVALID, reg2;
 	enum cs_ac_type access1, access2;
 
 	// printf("opcode = %u\n", MCInst_getOpcode(MI));
@@ -713,7 +711,6 @@ void X86_Intel_printInst(MCInst *MI, SStream *O, void *Info)
 	X86_lockrep(MI, O);
 	printInstruction(MI, O);
 
-	reg = X86_insn_reg_intel(MCInst_getOpcode(MI), &access1);
 	if (MI->csh->detail) {
 #ifndef CAPSTONE_DIET
 		uint8_t access[6] = {0};
@@ -721,6 +718,7 @@ void X86_Intel_printInst(MCInst *MI, SStream *O, void *Info)
 
 		// first op can be embedded in the asm by llvm.
 		// so we have to add the missing register as the first operand
+		reg = X86_insn_reg_intel_h(MI->csh, MCInst_getOpcode(MI), &access1);
 		if (reg) {
 			// shift all the ops right to leave 1st slot for this new register op
 			memmove(&(MI->flat_insn->detail->x86.operands[1]), &(MI->flat_insn->detail->x86.operands[0]),
@@ -931,7 +929,7 @@ static void printMemReference(MCInst *MI, unsigned Op, SStream *O)
 {
 	bool NeedPlus = false;
 	MCOperand *BaseReg  = MCInst_getOperand(MI, Op + X86_AddrBaseReg);
-	uint64_t ScaleVal = MCOperand_getImm(MCInst_getOperand(MI, Op + X86_AddrScaleAmt));
+	unsigned int ScaleVal = (unsigned int)MCOperand_getImm(MCInst_getOperand(MI, Op + X86_AddrScaleAmt));
 	MCOperand *IndexReg  = MCInst_getOperand(MI, Op + X86_AddrIndexReg);
 	MCOperand *DispSpec = MCInst_getOperand(MI, Op + X86_AddrDisp);
 	MCOperand *SegReg = MCInst_getOperand(MI, Op + X86_AddrSegmentReg);
@@ -1037,7 +1035,6 @@ static void printanymem(MCInst *MI, unsigned OpNo, SStream *O)
 		case X86_LEA64r:
 				 MI->x86opsize = 8;
 				 break;
-#ifndef CAPSTONE_X86_REDUCE
 		case X86_BNDCL32rm:
 		case X86_BNDCN32rm:
 		case X86_BNDCU32rm:
@@ -1048,7 +1045,6 @@ static void printanymem(MCInst *MI, unsigned OpNo, SStream *O)
 		case X86_BNDCU64rm:
 				 MI->x86opsize = 16;
 				 break;
-#endif
 	}
 
 	printMemReference(MI, OpNo, O);
@@ -1061,13 +1057,5 @@ static void printanymem(MCInst *MI, unsigned OpNo, SStream *O)
 #endif
 
 #include "X86GenRegisterName1.inc"
-
-#else
-
-void X86_Intel_printInst(MCInst *MI, SStream *O, void *Info)
-{
-}
-
-#endif
 
 #endif

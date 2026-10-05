@@ -15,7 +15,7 @@
 /* Capstone Disassembly Engine */
 /* By Nguyen Anh Quynh <aquynh@gmail.com>, 2013-2019 */
 
-#ifdef _MSC_VER
+#if defined (WIN32) || defined (WIN64) || defined (_WIN32) || defined (_WIN64)
 #pragma warning(disable:4996)			// disable MSVC's warning on strncpy()
 #pragma warning(disable:28719)		// disable MSVC's warning on strncpy()
 #endif
@@ -42,7 +42,7 @@
 #include "X86InstPrinterCommon.h"
 #include "X86Mapping.h"
 
-#if !defined(CAPSTONE_TINY) && !defined(CAPSTONE_X86_REDUCE)
+#ifndef CAPSTONE_X86_REDUCE
 void printSSEAVXCC(MCInst *MI, unsigned Op, SStream *O)
 {
 	uint8_t Imm = (uint8_t)(MCOperand_getImm(MCInst_getOperand(MI, Op)) & 0x1f);

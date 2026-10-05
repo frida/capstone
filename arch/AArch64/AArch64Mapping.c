@@ -390,8 +390,6 @@ const char *AArch64_reg_name(csh handle, unsigned int reg)
 #endif
 }
 
-#ifndef CAPSTONE_TINY
-
 static const insn_map insns[] = {
 	// dummy item
 	{
@@ -430,15 +428,6 @@ void AArch64_get_insn_id(cs_struct *h, cs_insn *insn, unsigned int id)
 		}
 	}
 }
-
-#else
-
-void AArch64_get_insn_id(cs_struct *h, cs_insn *insn, unsigned int id)
-{
-	insn->id = id;
-}
-
-#endif
 
 static const char * const insn_name_maps[] = {
 	NULL, // ARM64_INS_INVALID
@@ -838,6 +827,11 @@ const uint8_t *AArch64_get_op_access(cs_struct *h, unsigned int id)
 	return NULL;
 }
 
+static bool is_casp(unsigned int id);
+static void add_casp_register_pair_access(const cs_arm64 *arm64,
+		cs_regs regs_read, uint8_t *read_count,
+		cs_regs regs_write, uint8_t *write_count);
+
 void AArch64_reg_access(const cs_insn *insn,
 		cs_regs regs_read, uint8_t *regs_read_count,
 		cs_regs regs_write, uint8_t *regs_write_count)
@@ -886,26 +880,39 @@ void AArch64_reg_access(const cs_insn *insn,
 		}
 	}
 
-	// The LSE compare-and-swap-pair (CASP) instructions take register-pair
-	// operands whose second element receives no operand-access info, so account
-	// for it explicitly: operands 0..1 are read and written, 2..3 are read.
-	if (insn->id == ARM64_INS_CASP || insn->id == ARM64_INS_CASPA ||
-			insn->id == ARM64_INS_CASPAL || insn->id == ARM64_INS_CASPL) {
-		for (i = 0; i < 4 && i < arm64->op_count; i++) {
-			arm64_reg reg = arm64->operands[i].reg;
-			if (!arr_exist(regs_read, read_count, reg)) {
-				regs_read[read_count] = (uint16_t)reg;
-				read_count++;
-			}
-			if (i < 2 && !arr_exist(regs_write, write_count, reg)) {
-				regs_write[write_count] = (uint16_t)reg;
-				write_count++;
-			}
-		}
-	}
+	if (is_casp(insn->id))
+		add_casp_register_pair_access(arm64, regs_read, &read_count, regs_write, &write_count);
 
 	*regs_read_count = read_count;
 	*regs_write_count = write_count;
+}
+
+static bool is_casp(unsigned int id)
+{
+	return id == ARM64_INS_CASP || id == ARM64_INS_CASPA ||
+		id == ARM64_INS_CASPAL || id == ARM64_INS_CASPL;
+}
+
+// The CASP register-pair operands have their second element printed without any
+// operand-access info, so populate it here: operands 0..1 are read and written,
+// 2..3 are read.
+static void add_casp_register_pair_access(const cs_arm64 *arm64,
+		cs_regs regs_read, uint8_t *read_count,
+		cs_regs regs_write, uint8_t *write_count)
+{
+	uint8_t i;
+
+	for (i = 0; i < 4 && i < arm64->op_count; i++) {
+		arm64_reg reg = arm64->operands[i].reg;
+		if (!arr_exist(regs_read, *read_count, reg)) {
+			regs_read[*read_count] = (uint16_t)reg;
+			(*read_count)++;
+		}
+		if (i < 2 && !arr_exist(regs_write, *write_count, reg)) {
+			regs_write[*write_count] = (uint16_t)reg;
+			(*write_count)++;
+		}
+	}
 }
 #endif
 

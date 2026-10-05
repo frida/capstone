@@ -1,10 +1,10 @@
 name: Run Test
-on: 
+on:
   push:
     paths-ignore:
       - ".gitignore"
       - "docs/**"
-      - "ChangeLog"      
+      - "ChangeLog"
       - "CREDITS.TXT"
       - "COMPILE.TXT"
       - "COMPILE_MSVC.TXT"
@@ -30,48 +30,31 @@ jobs:
       matrix:
         config:
           - {
-              name: 'ubuntu-20.04 x64 python3.6 cmake',
-              os: ubuntu-20.04,
+              name: 'ubuntu-22.04 x64 make',
+              os: ubuntu-22.04,
               arch: x64,
-              python-arch: x64,
-              python-version: '3.6',
-              build-system: 'cmake',
+              build-system: 'make',
             }
           - {
-              name: 'ubuntu-22.04 x64 python3.9 make',
+              name: 'ubuntu-22.04 x64 cmake',
               os: ubuntu-22.04,
               arch: x64,
-              python-arch: x64,
-              python-version: '3.9',
-              build-system: 'make',
-            }   
-          - {
-              name: 'ubuntu-22.04 x64 python3.9 cmake',
-              os: ubuntu-22.04,
-              arch: x64,
-              python-arch: x64,
-              python-version: '3.9',
               build-system: 'cmake',
-            }     
+              enable-asan: 'OFF'
+            }
           - {
-              name: 'ubuntu-22.04 x64 python3.11 cmake',
-              os: ubuntu-22.04,
+              name: 'ubuntu-22.04 x64 ASAN',
+              os: ubuntu-latest,
               arch: x64,
-              python-arch: x64,
-              python-version: '3.11',
               build-system: 'cmake',
+              enable-asan: 'ON'
             }
 
     steps:
     - uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.config.python-version }}
-
     - name: prepare
-      shell: 'script -q -e -c "bash {0}"'
+      shell: 'script -q -e -c "bash -e {0}"'
       run: |
         export LD_LIBRARY_PATH=`pwd`/tests/:$LD_LIBRARY_PATH
         wget https://github.com/groundx/capstonefuzz/raw/master/corpus/corpus-libFuzzer-capstone_fuzz_disasmnext-latest.zip
@@ -81,7 +64,7 @@ jobs:
 
     - name: make
       if: startsWith(matrix.config.build-system, 'make')
-      shell: 'script -q -e -c "bash {0}"'
+      shell: 'script -q -e -c "bash -e {0}"'
       run: |
         ./make.sh;
         make check;
@@ -90,7 +73,7 @@ jobs:
 
     - name: cmake
       if: startsWith(matrix.config.build-system, 'cmake')
-      shell: 'script -q -e -c "bash {0}"'
+      shell: 'script -q -e -c "bash -e {0}"'
       run: |
         mkdir build && cd build;
         cmake -DCAPSTONE_INSTALL=1 -DBUILD_SHARED_LIBS=1 ..;
@@ -98,20 +81,19 @@ jobs:
         cp libcapstone.* ../;
         # sudo make install;
 
-    - name: build python binding
-      shell: 'script -q -e -c "bash {0}"'
-      run: |
-        mkdir -p bindings/python/capstone/lib && cp libcapstone.so.5.* bindings/python/capstone/lib/libcapstone.so;
-        cd bindings/python;
-        make && make check ; 
-        cd ../..;
-
     - name: cstest
-      shell: 'script -q -e -c "bash {0}"'
+      shell: 'script -q -e -c "bash -e {0}"'
       run: |
         cd suite/cstest && ./build_cstest.sh;
+        export LD_LIBRARY_PATH="${PWD}/../..:${LD_LIBRARY_PATH:-}";
         python cstest_report.py -D -t build/cstest -d ../MC;
         python cstest_report.py -D -t build/cstest -f issues.cs; cd ..;
+
+    - name: test_ppc_iter_detail
+      shell: 'script -q -e -c "bash -e {0}"'
+      run: |
+        export LD_LIBRARY_PATH="${PWD}:${LD_LIBRARY_PATH:-}"
+        if [ -x build/test_ppc_iter_detail ]; then ./build/test_ppc_iter_detail; else ./tests/test_ppc_iter_detail; fi
 
   Windows:
     runs-on: ${{ matrix.config.os }}
@@ -135,7 +117,7 @@ jobs:
 
     - name: '🛠️ Win MSVC 64 setup'
       if: contains(matrix.config.name, 'MSVC 64')
-      uses: ilammy/msvc-dev-cmd@v1  
+      uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: 'x64'
 
